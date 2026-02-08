@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Folder, Layout, Users, Settings, LogOut, Bug } from 'lucide-react';
+import { Plus, Folder, Layout, Users, Settings, LogOut, Bug, Menu, X } from 'lucide-react';
 import SettingsModal from '../components/SettingsModal';
+import toast from 'react-hot-toast';
 
 const Dashboard = () => {
     const [projects, setProjects] = useState([]);
@@ -11,6 +12,7 @@ const Dashboard = () => {
     const [showModal, setShowModal] = useState(false);
     const [showSettingsModal, setShowSettingsModal] = useState(false);
     const [newProject, setNewProject] = useState({ name: '', description: '' });
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const { user, logout } = useAuth();
 
@@ -23,6 +25,7 @@ const Dashboard = () => {
             const response = await api.get('/projects');
             setProjects(response.data);
         } catch (error) {
+            toast.error('Error fetching projects. Please try again.');
             console.error('Error fetching projects:', error);
         } finally {
             setLoading(false);
@@ -36,18 +39,54 @@ const Dashboard = () => {
             setProjects([...projects, response.data]);
             setShowModal(false);
             setNewProject({ name: '', description: '' });
+            toast.success('Project created successfully!');
         } catch (error) {
+            toast.error(error.response?.data?.message || 'Error creating project.');
             console.error('Error creating project:', error);
         }
     };
 
     return (
-        <div className="flex h-screen bg-background">
-            {/* Sidebar */}
-            <aside className="w-64 bg-surface border-r border-border flex flex-col">
-                <div className="p-6 flex items-center gap-2 text-primary font-bold text-xl">
+        <div className="flex h-screen bg-background relative overflow-hidden">
+            {/* Mobile Header */}
+            <header className="lg:hidden absolute top-0 left-0 right-0 h-16 bg-surface border-b border-border flex items-center justify-between px-4 z-40">
+                <div className="flex items-center gap-2 text-primary font-bold text-xl">
                     <Bug size={24} />
                     <span>BugTracker</span>
+                </div>
+                <button
+                    onClick={() => setIsSidebarOpen(true)}
+                    className="p-2 text-text-muted hover:text-primary transition-colors"
+                >
+                    <Menu size={24} />
+                </button>
+            </header>
+
+            {/* Sidebar Overlay */}
+            {isSidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-50 lg:hidden transition-opacity"
+                    onClick={() => setIsSidebarOpen(false)}
+                />
+            )}
+
+            {/* Sidebar */}
+            <aside className={`
+                fixed inset-y-0 left-0 z-50 w-64 bg-surface border-r border-border flex flex-col transition-transform duration-300 transform
+                ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+                lg:translate-x-0 lg:static lg:block
+            `}>
+                <div className="p-6 flex items-center justify-between text-primary font-bold text-xl">
+                    <div className="flex items-center gap-2">
+                        <Bug size={24} />
+                        <span>BugTracker</span>
+                    </div>
+                    <button
+                        onClick={() => setIsSidebarOpen(false)}
+                        className="lg:hidden p-1 text-text-muted hover:text-primary transition-colors"
+                    >
+                        <X size={20} />
+                    </button>
                 </div>
 
                 <nav className="flex-1 px-4 py-4 space-y-1">
@@ -86,18 +125,19 @@ const Dashboard = () => {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 overflow-auto p-8">
-                <header className="flex justify-between items-center mb-8">
-                    <div>
+            <main className="flex-1 min-w-0 overflow-auto p-4 md:p-8 pt-28 md:pt-32 lg:pt-8">
+                <header className="flex flex-wrap justify-between items-center gap-4 mb-8">
+                    <div className="min-w-0">
                         <h1 className="text-2xl font-bold text-text">Projects</h1>
-                        <p className="text-text-muted">Manage your team's projects and issues</p>
+                        <p className="text-text-muted text-sm md:text-base">Manage your team's projects and issues</p>
                     </div>
                     <button
                         onClick={() => setShowModal(true)}
-                        className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-sm flex items-center gap-2 transition-colors font-medium shadow-sm"
+                        className="bg-primary hover:bg-primary-dark text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-sm flex items-center gap-1.5 sm:gap-2 transition-colors text-sm sm:text-base font-medium shadow-sm flex-shrink-0"
                     >
                         <Plus size={18} />
-                        <span>Create Project</span>
+                        <span className="hidden xs:inline">Create Project</span>
+                        <span className="xs:hidden">Create</span>
                     </button>
                 </header>
 
@@ -123,7 +163,7 @@ const Dashboard = () => {
                             <Link
                                 key={project._id}
                                 to={`/project/${project._id}`}
-                                className="bg-surface p-6 rounded-sm border border-border shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
+                                className="bg-surface p-6 rounded-sm border border-border shadow-sm hover:shadow-md transition-shadow cursor-pointer group min-w-0"
                             >
                                 <div className="w-10 h-10 bg-primary/10 rounded-sm flex items-center justify-center text-primary mb-4 group-hover:bg-primary group-hover:text-white transition-colors">
                                     <Folder size={20} />

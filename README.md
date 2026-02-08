@@ -16,7 +16,8 @@ A robust, industry-standard Bug Tracker application built with the **MERN Stack*
 - **Real-Time Collaboration**: Live ticket updates and notifications powered by Socket.io.
 - **Role-Based Access Control (RBAC)**: Manage permissions for Admins, Managers, Developers, and Viewers.
 - **File Attachments**: Upload screenshots and logs to bug reports for better clarity.
-- **Mobile Responsive**: Fully optimized for a seamless experience across desktop and mobile devices.
+- **Mobile Responsive**: Fully optimized with custom-built responsive components (like dropdowns) to ensure a seamless and consistent experience across all browser engines and screen sizes.
+- **Global Notifications**: Professional toast messages for instant user feedback on every action.
 
 ## 🛠️ Tech Stack
 
@@ -27,6 +28,7 @@ A robust, industry-standard Bug Tracker application built with the **MERN Stack*
 - **Socket.io Client**: Real-time communication with the backend.
 - **Axios**: HTTP client for API communication.
 - **React Router**: Seamless client-side navigation.
+- **react-hot-toast**: Beautiful and responsive toast notifications.
 
 ### Backend
 - **Node.js & Express.js**: High-performance RESTful API.

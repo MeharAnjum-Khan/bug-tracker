@@ -1,15 +1,14 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Bug, AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { Bug, Eye, EyeOff } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const Register = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const { register } = useAuth();
@@ -17,19 +16,16 @@ const Register = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
-
-
         setIsSubmitting(true);
 
         try {
             await register(name, email, password);
-            setSuccess('Account created successfully! Redirecting to login...');
+            toast.success('Account created successfully! Redirecting to login...');
             setTimeout(() => {
                 navigate('/login');
             }, 2000);
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to create account. Please try again.');
+            toast.error(err.response?.data?.message || 'Failed to create account. Please try again.');
         } finally {
             setIsSubmitting(false);
         }
@@ -45,20 +41,6 @@ const Register = () => {
                     <h1 className="text-2xl font-bold text-text">Create your account</h1>
                     <p className="text-text-muted mt-1 text-sm">Bug Tracker / Issue Tracker</p>
                 </div>
-
-                {error && (
-                    <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-sm flex items-start gap-2 text-sm">
-                        <AlertCircle size={18} className="shrink-0 mt-0.5" />
-                        <span>{error}</span>
-                    </div>
-                )}
-
-                {success && (
-                    <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-600 rounded-sm flex items-start gap-2 text-sm">
-                        <CheckCircle size={18} className="shrink-0 mt-0.5" />
-                        <span>{success}</span>
-                    </div>
-                )}
 
                 <form onSubmit={handleSubmit} className="space-y-3">
                     <div>
@@ -105,7 +87,6 @@ const Register = () => {
                             </button>
                         </div>
                     </div>
-
 
                     <button
                         type="submit"

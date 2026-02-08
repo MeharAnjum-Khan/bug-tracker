@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import socket from '../socket';
 import api from '../api';
@@ -18,11 +18,14 @@ import {
     Layout,
     List,
     Users,
-    ArrowUpDown
+    ArrowUpDown,
+    Menu,
+    X
 } from 'lucide-react';
 import KanbanBoard from '../components/KanbanBoard';
 import TicketDetailsModal from '../components/TicketDetailsModal';
 import TeamManagementModal from '../components/TeamManagementModal';
+import toast from 'react-hot-toast';
 
 const ProjectDetails = () => {
     const { projectId } = useParams();
@@ -46,6 +49,16 @@ const ProjectDetails = () => {
     const [showTeamModal, setShowTeamModal] = useState(false);
     const [sortBy, setSortBy] = useState('newest'); // Item 1: Sorting state
     const [allProjects, setAllProjects] = useState([]); // Item 3: Project Switcher state
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isMobileSwitcherOpen, setIsMobileSwitcherOpen] = useState(false); // Mobile switcher state
+    const [isStatusOpen, setIsStatusOpen] = useState(false);
+    const [isPriorityOpen, setIsPriorityOpen] = useState(false);
+    const [isSortOpen, setIsSortOpen] = useState(false);
+
+    const switcherRef = useRef(null);
+    const statusRef = useRef(null);
+    const priorityRef = useRef(null);
+    const sortRef = useRef(null);
 
     const { user } = useAuth();
     const navigate = useNavigate();
@@ -108,9 +121,37 @@ const ProjectDetails = () => {
                 if (updated) setSelectedTicket(updated);
             }
         } catch (error) {
+            toast.error('Error fetching project data.');
             console.error('Error fetching data:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Click outside handler for all dropdowns
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (switcherRef.current && !switcherRef.current.contains(event.target)) {
+                setIsMobileSwitcherOpen(false);
+            }
+            if (statusRef.current && !statusRef.current.contains(event.target)) {
+                setIsStatusOpen(false);
+            }
+            if (priorityRef.current && !priorityRef.current.contains(event.target)) {
+                setIsPriorityOpen(false);
+            }
+            if (sortRef.current && !sortRef.current.contains(event.target)) {
+                setIsSortOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const handleSwitcherToggle = () => {
+        // Only toggle via click on mobile/tablet (below 1024px)
+        if (window.innerWidth < 1024) {
+            setIsMobileSwitcherOpen(!isMobileSwitcherOpen);
         }
     };
 
@@ -130,7 +171,9 @@ const ProjectDetails = () => {
                 status: 'To Do',
                 assignee: ''
             });
+            toast.success('Ticket created!');
         } catch (error) {
+            toast.error('Error creating ticket.');
             console.error('Error creating ticket:', error);
         }
     };
@@ -140,6 +183,7 @@ const ProjectDetails = () => {
             await api.put(`/tickets/${ticketId}`, { status: newStatus });
             fetchProjectAndTickets();
         } catch (error) {
+            toast.error('Error updating status.');
             console.error('Error updating status:', error);
         }
     };
@@ -150,7 +194,9 @@ const ProjectDetails = () => {
             await api.delete(`/tickets/${ticketId}`);
             fetchProjectAndTickets();
             setSelectedTicket(null);
+            toast.success('Ticket deleted.');
         } catch (error) {
+            toast.error('Error deleting ticket.');
             console.error('Error deleting ticket:', error);
         }
     };
@@ -219,12 +265,46 @@ const ProjectDetails = () => {
     );
 
     return (
-        <div className="flex h-screen bg-background">
-            {/* Sidebar (Partial reuse or simple version) */}
-            <aside className="w-64 bg-surface border-r border-border flex flex-col">
-                <div className="p-6 flex items-center gap-2 text-primary font-bold text-xl cursor-pointer" onClick={() => navigate('/dashboard')}>
+        <div className="flex h-screen bg-background relative overflow-hidden">
+            {/* Mobile Header */}
+            <header className="lg:hidden absolute top-0 left-0 right-0 h-16 bg-surface border-b border-border flex items-center justify-between px-4 z-40">
+                <div className="flex items-center gap-2 text-primary font-bold text-xl">
                     <Bug size={24} />
                     <span>BugTracker</span>
+                </div>
+                <button
+                    onClick={() => setIsSidebarOpen(true)}
+                    className="p-2 text-text-muted hover:text-primary transition-colors"
+                >
+                    <Menu size={24} />
+                </button>
+            </header>
+
+            {/* Sidebar Overlay */}
+            {isSidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-50 lg:hidden transition-opacity"
+                    onClick={() => setIsSidebarOpen(false)}
+                />
+            )}
+
+            {/* Sidebar */}
+            <aside className={`
+                fixed inset-y-0 left-0 z-50 w-64 bg-surface border-r border-border flex flex-col transition-transform duration-300 transform
+                ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+                lg:translate-x-0 lg:static lg:block
+            `}>
+                <div className="p-6 flex items-center justify-between text-primary font-bold text-xl cursor-pointer" onClick={() => navigate('/dashboard')}>
+                    <div className="flex items-center gap-2">
+                        <Bug size={24} />
+                        <span>BugTracker</span>
+                    </div>
+                    <button
+                        onClick={() => setIsSidebarOpen(false)}
+                        className="lg:hidden p-1 text-text-muted hover:text-primary transition-colors"
+                    >
+                        <X size={20} />
+                    </button>
                 </div>
                 <nav className="flex-1 px-4 py-4 space-y-1">
                     <Link to="/dashboard" className="flex items-center gap-3 px-3 py-2 text-text-muted hover:bg-background rounded-sm transition-colors">
@@ -255,17 +335,23 @@ const ProjectDetails = () => {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 overflow-auto p-8">
+            <main className="flex-1 overflow-auto p-4 md:p-8 pt-20 lg:pt-8">
                 <header className="mb-8">
                     <div className="flex items-center gap-2 text-sm text-text-muted mb-2">
                         <Link to="/dashboard" className="hover:text-primary">Projects</Link>
                         <span>/</span>
-                        <div className="relative group">
-                            <button className="flex items-center gap-1 text-text hover:text-primary transition-colors font-medium">
+                        <div className="relative group" ref={switcherRef}>
+                            <button
+                                onClick={handleSwitcherToggle}
+                                className="flex items-center gap-1 text-text hover:text-primary transition-colors font-medium"
+                            >
                                 {project?.name}
                                 <ChevronDown size={14} />
                             </button>
-                            <div className="absolute left-0 top-full mt-1 w-64 bg-surface border border-border rounded-sm shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 py-1 max-h-60 overflow-y-auto">
+                            <div className={`
+                                absolute left-0 top-full mt-1 w-64 bg-surface border border-border rounded-sm shadow-xl transition-all z-50 py-1 max-h-60 overflow-y-auto
+                                ${isMobileSwitcherOpen ? 'opacity-100 visible' : 'opacity-0 invisible lg:group-hover:opacity-100 lg:group-hover:visible'}
+                            `}>
                                 <div className="px-3 py-2 text-[10px] font-bold text-text-muted uppercase tracking-widest border-b border-border mb-1">
                                     Switch Project
                                 </div>
@@ -275,6 +361,7 @@ const ProjectDetails = () => {
                                         onClick={() => {
                                             if (p._id !== projectId) {
                                                 navigate(`/project/${p._id}`);
+                                                setIsMobileSwitcherOpen(false);
                                             }
                                         }}
                                         className={`w-full text-left px-4 py-2 text-sm hover:bg-background transition-colors flex items-center justify-between ${p._id === projectId ? 'text-primary bg-primary-light/5 font-bold' : 'text-text'}`}
@@ -319,55 +406,118 @@ const ProjectDetails = () => {
                 </header>
 
                 {/* Filters bar */}
-                <div className="flex gap-4 mb-6">
-                    <div className="relative flex-1 max-w-sm">
+                <div className="grid grid-cols-2 lg:flex lg:flex-wrap gap-4 mb-6">
+                    <div className="relative col-span-2 lg:flex-1 lg:max-w-sm">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
                         <input
                             type="text"
                             placeholder="Search issues..."
-                            className="w-full pl-10 pr-4 py-2 bg-surface border border-border rounded-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
+                            className="w-full pl-10 pr-4 py-2 bg-surface border border-border rounded-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm shadow-sm"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    <div className="relative">
-                        <select
-                            className="px-3 py-2 border border-border bg-surface text-text hover:bg-background rounded-sm text-sm focus:outline-none cursor-pointer pr-8 appearance-none min-w-[100px]"
-                            value={filterStatus}
-                            onChange={(e) => setFilterStatus(e.target.value)}
+                    {/* Status Dropdown */}
+                    <div className="relative col-span-1 lg:w-auto" ref={statusRef}>
+                        <button
+                            onClick={() => setIsStatusOpen(!isStatusOpen)}
+                            className="w-full lg:w-auto px-3 py-2 border border-border bg-surface text-text hover:bg-background rounded-sm text-sm focus:outline-none cursor-pointer flex items-center justify-between gap-2 min-w-[100px] shadow-sm transition-colors"
                         >
-                            <option value="All">Status</option>
-                            <option value="To Do">To Do</option>
-                            <option value="In Progress">In Progress</option>
-                            <option value="Done">Done</option>
-                        </select>
-                        <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+                            <span className="truncate">{filterStatus === 'All' ? 'Status' : filterStatus}</span>
+                            <ChevronDown size={14} className={`text-text-muted transition-transform duration-200 ${isStatusOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                        <div className={`
+                            absolute left-0 top-full mt-1 w-full lg:min-w-[150px] bg-surface border border-border rounded-sm shadow-xl transition-all z-50 py-1
+                            ${isStatusOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}
+                        `}>
+                            <div className="px-3 py-2 text-[10px] font-bold text-text-muted uppercase tracking-widest border-b border-border mb-1">
+                                Status
+                            </div>
+                            {['All', 'To Do', 'In Progress', 'Done'].map(status => (
+                                <button
+                                    key={status}
+                                    onClick={() => {
+                                        setFilterStatus(status);
+                                        setIsStatusOpen(false);
+                                    }}
+                                    className={`w-full text-left px-4 py-2 text-sm hover:bg-background transition-colors flex items-center justify-between ${filterStatus === status ? 'text-primary bg-primary-light/5 font-bold' : 'text-text'}`}
+                                >
+                                    <span>{status}</span>
+                                    {filterStatus === status && <div className="w-1.5 h-1.5 rounded-full bg-primary" />}
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                    <div className="relative">
-                        <select
-                            className="px-3 py-2 border border-border bg-surface text-text hover:bg-background rounded-sm text-sm focus:outline-none cursor-pointer pr-8 appearance-none min-w-[100px]"
-                            value={filterPriority}
-                            onChange={(e) => setFilterPriority(e.target.value)}
+
+                    {/* Priority (Filter) Dropdown */}
+                    <div className="relative col-span-1 lg:w-auto" ref={priorityRef}>
+                        <button
+                            onClick={() => setIsPriorityOpen(!isPriorityOpen)}
+                            className="w-full lg:w-auto px-3 py-2 border border-border bg-surface text-text hover:bg-background rounded-sm text-sm focus:outline-none cursor-pointer flex items-center justify-between gap-2 min-w-[100px] shadow-sm transition-colors"
                         >
-                            <option value="All">Filter</option>
-                            <option value="Low">Low</option>
-                            <option value="Medium">Medium</option>
-                            <option value="High">High</option>
-                            <option value="Highest">Highest</option>
-                        </select>
-                        <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+                            <span className="truncate">{filterPriority === 'All' ? 'Filter' : filterPriority}</span>
+                            <ChevronDown size={14} className={`text-text-muted transition-transform duration-200 ${isPriorityOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                        <div className={`
+                            absolute left-0 top-full mt-1 w-full lg:min-w-[150px] bg-surface border border-border rounded-sm shadow-xl transition-all z-50 py-1
+                            ${isPriorityOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}
+                        `}>
+                            <div className="px-3 py-2 text-[10px] font-bold text-text-muted uppercase tracking-widest border-b border-border mb-1">
+                                Priority
+                            </div>
+                            {['All', 'Low', 'Medium', 'High', 'Highest'].map(priority => (
+                                <button
+                                    key={priority}
+                                    onClick={() => {
+                                        setFilterPriority(priority);
+                                        setIsPriorityOpen(false);
+                                    }}
+                                    className={`w-full text-left px-4 py-2 text-sm hover:bg-background transition-colors flex items-center justify-between ${filterPriority === priority ? 'text-primary bg-primary-light/5 font-bold' : 'text-text'}`}
+                                >
+                                    <span>{priority}</span>
+                                    {filterPriority === priority && <div className="w-1.5 h-1.5 rounded-full bg-primary" />}
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                    <div className="relative">
-                        <select
-                            className="px-3 py-2 border border-border bg-surface text-text hover:bg-background rounded-sm text-sm focus:outline-none cursor-pointer pr-8 appearance-none min-w-[120px]"
-                            value={sortBy}
-                            onChange={(e) => setSortBy(e.target.value)}
+
+                    {/* Sort Dropdown */}
+                    <div className="relative col-span-2 lg:w-auto" ref={sortRef}>
+                        <button
+                            onClick={() => setIsSortOpen(!isSortOpen)}
+                            className="w-full lg:w-auto px-3 py-2 border border-border bg-surface text-text hover:bg-background rounded-sm text-sm focus:outline-none cursor-pointer flex items-center justify-between gap-2 min-w-[120px] shadow-sm transition-colors"
                         >
-                            <option value="newest">Newest First</option>
-                            <option value="oldest">Oldest First</option>
-                            <option value="priority">Priority</option>
-                        </select>
-                        <ArrowUpDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+                            <div className="flex items-center gap-2">
+                                <ArrowUpDown size={14} className="text-text-muted" />
+                                <span>{sortBy === 'newest' ? 'Newest First' : sortBy === 'oldest' ? 'Oldest First' : 'Priority'}</span>
+                            </div>
+                            <ChevronDown size={14} className={`text-text-muted transition-transform duration-200 ${isSortOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                        <div className={`
+                            absolute left-0 lg:right-0 lg:left-auto top-full mt-1 w-full lg:min-w-[160px] bg-surface border border-border rounded-sm shadow-xl transition-all z-50 py-1
+                            ${isSortOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}
+                        `}>
+                            <div className="px-3 py-2 text-[10px] font-bold text-text-muted uppercase tracking-widest border-b border-border mb-1">
+                                Sort By
+                            </div>
+                            {[
+                                { value: 'newest', label: 'Newest First' },
+                                { value: 'oldest', label: 'Oldest First' },
+                                { value: 'priority', label: 'Priority' }
+                            ].map(option => (
+                                <button
+                                    key={option.value}
+                                    onClick={() => {
+                                        setSortBy(option.value);
+                                        setIsSortOpen(false);
+                                    }}
+                                    className={`w-full text-left px-4 py-2 text-sm hover:bg-background transition-colors flex items-center justify-between ${sortBy === option.value ? 'text-primary bg-primary-light/5 font-bold' : 'text-text'}`}
+                                >
+                                    <span>{option.label}</span>
+                                    {sortBy === option.value && <div className="w-1.5 h-1.5 rounded-full bg-primary" />}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
 
@@ -382,8 +532,8 @@ const ProjectDetails = () => {
                         canEdit={canCreateIssue}
                     />
                 ) : (
-                    <div className="bg-surface border border-border rounded-sm shadow-sm overflow-hidden">
-                        <table className="w-full text-left border-collapse">
+                    <div className="bg-surface border border-border rounded-sm shadow-sm overflow-x-auto">
+                        <table className="w-full text-left border-collapse min-w-[800px]">
                             <thead>
                                 <tr className="bg-background/50 border-b border-border text-xs font-bold text-text-muted uppercase tracking-wider">
                                     <th className="px-6 py-3 w-12">Type</th>

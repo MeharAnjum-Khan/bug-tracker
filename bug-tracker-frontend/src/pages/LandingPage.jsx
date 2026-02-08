@@ -1,16 +1,8 @@
 import React from 'react';
-import { Link, Navigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
 import { Bug, ChevronRight } from 'lucide-react';
 
 const LandingPage = () => {
-    const { user } = useAuth();
-
-    // If user is already logged in, redirect to dashboard
-    if (user) {
-        return <Navigate to="/dashboard" />;
-    }
-
     return (
         <div className="min-h-screen bg-background flex flex-col">
             {/* Header */}
