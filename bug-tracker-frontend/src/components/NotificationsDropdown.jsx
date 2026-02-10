@@ -193,23 +193,7 @@ const NotificationsDropdown = ({ isOpen, onClose }) => {
                 )}
             </div>
 
-            <div className="px-4 py-2 border-t border-border bg-background/30 flex flex-col gap-2 text-center">
-                <button
-                    onClick={async () => {
-                        if (window.confirm('DEBUG: Wipe ALL notifications from Database?')) {
-                            try {
-                                await api.delete('/notifications/clear-all-test');
-                                setNotifications([]);
-                                alert('Database cleared!');
-                            } catch (error) {
-                                console.error('Wipe failed:', error);
-                            }
-                        }
-                    }}
-                    className="text-[10px] font-bold text-red-500 hover:text-red-700 transition-colors uppercase py-1 border border-dashed border-red-200 rounded-sm"
-                >
-                    DEBUG: Wipe All Notifications
-                </button>
+            <div className="px-4 py-2 border-t border-border bg-background/30 text-center">
                 <button className="text-[11px] font-bold text-text-muted hover:text-primary transition-colors">
                     View all notifications
                 </button>

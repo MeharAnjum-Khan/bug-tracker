@@ -18,6 +18,10 @@ A robust, industry-standard Bug Tracker application built with the **MERN Stack*
 - **File Attachments**: Upload screenshots and logs to bug reports for better clarity.
 - **Mobile Responsive**: Fully optimized with custom-built responsive components (like dropdowns) to ensure a seamless and consistent experience across all browser engines and screen sizes.
 - **Global Notifications**: Professional toast messages for instant user feedback on every action.
+- **Centralized Notification Hub**: A real-time notification system featuring a persistent unread counter and a dedicated dropdown for tracking critical updates.
+- **App-wide Search System**: Instantly locate projects or issues from any page with high-speed query results and a debounced, efficient search engine.
+- **Unified Account Management**: A comprehensive user profile and settings interface for managing personal information and application preferences.
+- **Global Quick-Action Center**: A streamlined "Create" workflow accessible from every page, optimized for speed and productivity in fast-paced environments.
 
 ## 🛠️ Tech Stack
 
@@ -108,6 +112,10 @@ bug-tracker/
 - **CORS**: Configured for secure frontend-backend communication.
 - **Helmet**: Protecting well-known web vulnerabilities by setting HTTP headers.
 - **JWT Authorization**: Protecting private routes and user data.
+
+## 🛠️ Scheduled Maintenance & Fixes
+- **Assignee Update Notifications**: Fixing the notification trigger when a ticket's assignee is changed.
+- **Mobile Responsiveness Fixes**: Addressing sidebar highlighting and button visibility issues (Notifications & Avatar) in the "Manage Team" modal on specific mobile devices.
 
 ## 📝 License
 This project is licensed under the ISC License.

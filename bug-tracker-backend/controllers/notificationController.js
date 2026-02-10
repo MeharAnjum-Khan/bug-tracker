@@ -65,16 +65,4 @@ exports.markAllRead = async (req, res) => {
     }
 };
 
-/**
- * @desc    TEMP: Clear all notifications from database
- * @route   DELETE /api/notifications/clear-all-test
- * @access  Private
- */
-exports.deleteAllNotifications = async (req, res) => {
-    try {
-        await Notification.deleteMany({});
-        res.json({ message: 'Database cleared successfully' });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
+
