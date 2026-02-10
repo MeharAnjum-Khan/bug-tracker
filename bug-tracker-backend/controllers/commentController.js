@@ -1,5 +1,6 @@
 const Comment = require('../models/Comment');
 const Ticket = require('../models/Ticket');
+const Notification = require('../models/Notification');
 
 /**
  * @desc    Add a comment to a ticket
@@ -25,6 +26,28 @@ exports.addComment = async (req, res) => {
         const populatedComment = await Comment.findById(comment._id).populate('user', 'name');
 
         res.status(201).json(populatedComment);
+
+        // Notify Reporter and Assignee
+        const io = req.app.get('io');
+        const usersToNotify = [ticket.reporter.toString()];
+        if (ticket.assignee && ticket.assignee.toString() !== ticket.reporter.toString()) {
+            usersToNotify.push(ticket.assignee.toString());
+        }
+
+        // Filter out the person who just commented
+        const recipients = usersToNotify.filter(uid => uid !== req.user.id);
+
+        for (const recipientId of recipients) {
+            const notification = await Notification.create({
+                recipient: recipientId,
+                sender: req.user.id,
+                type: 'Comment',
+                ticket: ticket._id,
+                project: ticket.project,
+                message: `commented on: ${ticket.title}`
+            });
+            io.emit(`notification-${recipientId}`, notification);
+        }
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

@@ -20,7 +20,7 @@ const Register = () => {
 
         try {
             await register(name, email, password);
-            toast.success('Account created successfully! Redirecting to login...');
+            toast.success('Account created successfully!');
             setTimeout(() => {
                 navigate('/login');
             }, 2000);

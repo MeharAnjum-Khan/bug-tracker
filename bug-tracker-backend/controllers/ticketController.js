@@ -1,5 +1,6 @@
 const Ticket = require('../models/Ticket');
 const Project = require('../models/Project');
+const Notification = require('../models/Notification');
 
 /**
  * @desc    Create a new ticket
@@ -33,8 +34,21 @@ exports.createTicket = async (req, res) => {
 
         res.status(201).json(ticket);
 
-        // Emit socket event
+        // Notify Assignee
         const io = req.app.get('io');
+        if (assignee && assignee !== req.user.id) {
+            const notification = await Notification.create({
+                recipient: assignee,
+                sender: req.user.id,
+                type: 'Assignment',
+                ticket: ticket._id,
+                project: projectId,
+                message: `assigned you to: ${title}`
+            });
+            io.emit(`notification-${assignee}`, notification);
+        }
+
+        // Emit socket event to project room
         io.to(projectId).emit('ticket-created', ticket);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -75,27 +89,93 @@ exports.getTicketsByProject = async (req, res) => {
  */
 exports.updateTicket = async (req, res) => {
     try {
-        let ticket = await Ticket.findById(req.params.id);
-        if (!ticket) {
+        const oldTicket = await Ticket.findById(req.params.id);
+        if (!oldTicket) {
             return res.status(404).json({ message: 'Ticket not found' });
         }
 
         // Check if user is member of the project
-        const project = await Project.findById(ticket.project);
+        const project = await Project.findById(oldTicket.project);
         if (!project.teamMembers.some(m => m.user.toString() === req.user.id)) {
             return res.status(403).json({ message: 'Not authorized to update this ticket' });
         }
 
-        ticket = await Ticket.findByIdAndUpdate(req.params.id, req.body, {
+        const ticket = await Ticket.findByIdAndUpdate(req.params.id, req.body, {
             new: true,
             runValidators: true,
-        });
+        }).populate('assignee', 'name').populate('reporter', 'name').populate('project', 'name');
 
         res.json(ticket);
 
-        // Emit socket event
         const io = req.app.get('io');
-        io.to(ticket.project.toString()).emit('ticket-updated', ticket);
+
+        // Notification Logic
+        const notifications = [];
+
+        // 1. Assignment changed
+        const newAssigneeId = req.body.hasOwnProperty('assignee')
+            ? (req.body.assignee ? req.body.assignee.toString() : null)
+            : (oldTicket.assignee ? oldTicket.assignee.toString() : null);
+        const oldAssigneeId = oldTicket.assignee ? oldTicket.assignee.toString() : null;
+
+        if (newAssigneeId !== oldAssigneeId) {
+            // Notify New Assignee
+            if (newAssigneeId && newAssigneeId !== req.user.id) {
+                notifications.push({
+                    recipient: newAssigneeId,
+                    sender: req.user.id,
+                    type: 'Assignment',
+                    ticket: ticket._id,
+                    project: ticket.project?._id || ticket.project,
+                    message: `assigned you to: ${ticket.title}`
+                });
+            }
+
+            // Notify Old Assignee
+            if (oldAssigneeId && oldAssigneeId !== req.user.id) {
+                notifications.push({
+                    recipient: oldAssigneeId,
+                    sender: req.user.id,
+                    type: 'Assignment',
+                    ticket: ticket._id,
+                    project: ticket.project?._id || ticket.project,
+                    message: `You were unassigned from: ${ticket.title}`
+                });
+            }
+        }
+
+        // 2. Status changed
+        if (req.body.status && req.body.status !== oldTicket.status) {
+            const usersToNotify = [ticket.reporter._id.toString()];
+            if (ticket.assignee && ticket.assignee._id.toString() !== ticket.reporter._id.toString()) {
+                usersToNotify.push(ticket.assignee._id.toString());
+            }
+
+            const uniqueRecipients = [...new Set(usersToNotify.filter(uid => uid !== req.user.id))];
+            uniqueRecipients.forEach(uid => {
+                notifications.push({
+                    recipient: uid,
+                    sender: req.user.id,
+                    type: 'StatusUpdate',
+                    ticket: ticket._id,
+                    project: ticket.project?._id || ticket.project,
+                    message: `updated status of "${ticket.title}" to ${ticket.status}`
+                });
+            });
+        }
+
+        // Save, Populate and Emit notifications
+        for (const n of notifications) {
+            const created = await Notification.create(n);
+            const populated = await Notification.findById(created._id)
+                .populate('sender', 'name')
+                .populate('project', 'name')
+                .populate('ticket', 'title');
+            io.emit(`notification-${n.recipient}`, populated);
+        }
+
+        // Emit socket event
+        io.to(ticket.project._id.toString()).emit('ticket-updated', ticket);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

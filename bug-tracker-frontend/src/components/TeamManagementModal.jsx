@@ -51,7 +51,7 @@ const TeamManagementModal = ({ project, onClose, onUpdate }) => {
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-            <div className="bg-surface max-w-md w-full rounded-sm shadow-xl p-8 animate-in zoom-in-95 duration-200">
+            <div className="bg-surface max-w-md w-full rounded-sm shadow-xl p-6 animate-in zoom-in-95 duration-200">
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-bold text-text">Manage Team</h2>
                     <button onClick={onClose} className="text-text-muted hover:text-text transition-colors">
@@ -61,7 +61,7 @@ const TeamManagementModal = ({ project, onClose, onUpdate }) => {
 
                 {/* Add Member Form (Only for Owner) */}
                 {isOwner && (
-                    <form onSubmit={handleAddMember} className="mb-8 space-y-4">
+                    <form onSubmit={handleAddMember} className="mb-6 space-y-4">
                         <div>
                             <label className="block text-xs font-bold text-text-muted uppercase mb-1">Invite Member</label>
                             <div className="space-y-3">
@@ -102,7 +102,7 @@ const TeamManagementModal = ({ project, onClose, onUpdate }) => {
                 {success && <p className="text-xs text-green-600 mb-4 bg-green-50 p-2 rounded border border-green-100">{success}</p>}
 
                 {/* Member List */}
-                <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                <div className="space-y-4 max-h-[240px] overflow-y-auto pr-2 custom-scrollbar">
                     <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider">Project Members ({project.teamMembers.length})</h3>
                     {project.teamMembers.map((memberObj) => {
                         const member = memberObj.user;
@@ -154,7 +154,7 @@ const TeamManagementModal = ({ project, onClose, onUpdate }) => {
                     })}
                 </div>
 
-                <div className="mt-8 pt-4 border-t border-border flex justify-end">
+                <div className="mt-6 pt-4 border-t border-border flex justify-end">
                     <button
                         onClick={onClose}
                         className="text-text-muted hover:text-text px-4 py-2 font-medium text-sm transition-colors"

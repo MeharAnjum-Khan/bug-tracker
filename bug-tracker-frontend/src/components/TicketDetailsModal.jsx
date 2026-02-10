@@ -18,7 +18,7 @@ import {
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 
-const TicketDetailsModal = ({ ticket, onClose, onUpdate, onDelete, getPriorityColor, originalIndex, userRole, canDelete }) => {
+const TicketDetailsModal = ({ ticket, onClose, onUpdate, onDelete, getPriorityColor, originalIndex, userRole, canDelete, projectMembers }) => {
     const { user } = useAuth();
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState('');
@@ -399,15 +399,34 @@ const TicketDetailsModal = ({ ticket, onClose, onUpdate, onDelete, getPriorityCo
 
                         <div>
                             <h3 className="text-[10px] font-bold text-text-muted uppercase mb-2 tracking-widest">Assignee</h3>
-                            <div className="flex items-center gap-3 bg-surface border border-border p-3 rounded-sm">
-                                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-bold">
-                                    {ticket.assignee?.name?.charAt(0).toUpperCase() || '?'}
+                            {canEdit ? (
+                                <select
+                                    className="w-full bg-surface border border-border px-3 py-2 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer transition-all"
+                                    value={editedTicket.assignee?._id || editedTicket.assignee || ''}
+                                    onChange={(e) => {
+                                        const newAssigneeId = e.target.value;
+                                        setEditedTicket({ ...editedTicket, assignee: newAssigneeId });
+                                        api.put(`/tickets/${ticket._id}`, { assignee: newAssigneeId || null }).then(onUpdate);
+                                    }}
+                                >
+                                    <option value="">Unassigned</option>
+                                    {projectMembers.map(m => (
+                                        <option key={m.user?._id || m.user} value={m.user?._id || m.user}>
+                                            {m.user?.name} {m.user?._id === user?._id || m.user === user?._id ? '(You)' : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                            ) : (
+                                <div className="flex items-center gap-3 bg-surface border border-border p-3 rounded-sm opacity-80">
+                                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-bold">
+                                        {ticket.assignee?.name?.charAt(0).toUpperCase() || '?'}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-bold text-text truncate">{ticket.assignee?.name || 'Unassigned'}</p>
+                                        <p className="text-[10px] text-text-muted truncate">{ticket.assignee?.email || 'No email'}</p>
+                                    </div>
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-bold text-text truncate">{ticket.assignee?.name || 'Unassigned'}</p>
-                                    <p className="text-[10px] text-text-muted truncate">{ticket.assignee?.email || 'No email'}</p>
-                                </div>
-                            </div>
+                            )}
                         </div>
 
                         <div className="pt-6 border-t border-border space-y-3">
