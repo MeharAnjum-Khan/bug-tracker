@@ -118,4 +118,4 @@ bug-tracker/
 - **Mobile Responsiveness Fixes**: Addressing sidebar highlighting and button visibility issues (Notifications & Avatar) in the "Manage Team" modal on specific mobile devices.
 
 ## 📝 License
-This project is licensed under the ISC License.
+This project is licensed under the MIT License.
