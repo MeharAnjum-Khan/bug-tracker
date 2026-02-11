@@ -9,6 +9,14 @@ This is the backend API for the Bug Tracker application. It handles user authent
 - **Socket.io**: Real-time events and data synchronization.
 - **Helmet**: Essential security headers.
 - **Multer**: Handling file uploads.
+- **CORS**: Secure Cross-Origin Resource Sharing.
+- **Dotenv**: Environment variable management.
+
+## 🚀 Features
+- **Secure Authentication**: JWT-based auth with bcrypt password hashing.
+- **Real-Time Event Engine**: Socket.io integration for instant data synchronization.
+- **Scalable Data Models**: Mongoose-driven schemas for Projects, Tickets, and Users.
+- **Security-First Design**: Implementation of Helmet and CORS for robust API protection.
 
 ## ⚙️ Setup Instructions
 
@@ -36,3 +44,7 @@ This is the backend API for the Bug Tracker application. It handles user authent
 - `routes/`: API endpoints.
 - `middleware/`: Authentication and security.
 - `uploads/`: Local storage for attachments.
+
+## 🛠️ Scheduled Maintenance & Fixes
+- **Assignee Update Notifications**: Fixing the notification trigger logic when a ticket's assignee is changed.
+- **Environment Configuration**: Ensuring seamless transition between local and production environments.
