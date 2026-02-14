@@ -28,7 +28,6 @@ const TicketDetailsModal = ({ ticket, onClose, onUpdate, onDelete, getPriorityCo
     const [submittingComment, setSubmittingComment] = useState(false);
     const [uploading, setUploading] = useState(false);
 
-    const isViewer = userRole === 'Viewer';
     const canEdit = ['Admin', 'Manager', 'Developer'].includes(userRole);
 
     const handleFileUpload = async (e) => {
@@ -65,22 +64,21 @@ const TicketDetailsModal = ({ ticket, onClose, onUpdate, onDelete, getPriorityCo
 
     useEffect(() => {
         if (ticket) {
+            const fetchComments = async () => {
+                setLoadingComments(true);
+                try {
+                    const response = await api.get(`/comments/ticket/${ticket._id}`);
+                    setComments(response.data);
+                } catch (error) {
+                    console.error('Error fetching comments:', error);
+                } finally {
+                    setLoadingComments(false);
+                }
+            };
             fetchComments();
             setEditedTicket({ ...ticket });
         }
     }, [ticket]);
-
-    const fetchComments = async () => {
-        setLoadingComments(true);
-        try {
-            const response = await api.get(`/comments/ticket/${ticket._id}`);
-            setComments(response.data);
-        } catch (error) {
-            console.error('Error fetching comments:', error);
-        } finally {
-            setLoadingComments(false);
-        }
-    };
 
     const handleAddComment = async (e) => {
         e.preventDefault();
@@ -124,7 +122,7 @@ const TicketDetailsModal = ({ ticket, onClose, onUpdate, onDelete, getPriorityCo
     if (!ticket) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60] animate-in fade-in duration-200">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-60 animate-in fade-in duration-200">
             <div className="bg-surface w-full max-w-4xl max-h-[90vh] rounded-sm shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
                 {/* Header */}
                 <header className="px-6 py-4 border-b border-border flex items-center justify-between bg-surface sticky top-0 z-10">
@@ -191,7 +189,7 @@ const TicketDetailsModal = ({ ticket, onClose, onUpdate, onDelete, getPriorityCo
                                 />
                             ) : (
                                 <div
-                                    className={`text-sm text-text whitespace-pre-wrap min-h-[40px] rounded-sm transition-colors ${canEdit ? 'cursor-pointer hover:bg-background/50 p-2' : ''}`}
+                                    className={`text-sm text-text whitespace-pre-wrap min-h-10 rounded-sm transition-colors ${canEdit ? 'cursor-pointer hover:bg-background/50 p-2' : ''}`}
                                     onClick={() => canEdit && setIsEditing(true)}
                                 >
                                     {ticket.description || <span className="text-text-muted italic">No description provided. {canEdit && 'Click to add one.'}</span>}
@@ -296,7 +294,7 @@ const TicketDetailsModal = ({ ticket, onClose, onUpdate, onDelete, getPriorityCo
                                 </div>
                                 <div className="flex-1 relative">
                                     <textarea
-                                        className="w-full bg-background border border-border rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary min-h-[40px] resize-none"
+                                        className="w-full bg-background border border-border rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary min-h-10 resize-none"
                                         placeholder="Add a comment..."
                                         value={newComment}
                                         onChange={(e) => setNewComment(e.target.value)}
@@ -359,7 +357,7 @@ const TicketDetailsModal = ({ ticket, onClose, onUpdate, onDelete, getPriorityCo
                     </div>
 
                     {/* Right Column: Status & Attributes */}
-                    <div className="flex-1 p-6 bg-background/10 space-y-6 min-w-[280px]">
+                    <div className="flex-1 p-6 bg-background/10 space-y-6 min-w-70">
                         <div>
                             <h3 className="text-[10px] font-bold text-text-muted uppercase mb-2 tracking-widest">Status</h3>
                             <select

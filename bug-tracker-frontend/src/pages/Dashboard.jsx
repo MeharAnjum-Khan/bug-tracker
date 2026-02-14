@@ -23,22 +23,22 @@ const Dashboard = () => {
     const { user, logout } = useAuth();
 
     useEffect(() => {
+        const fetchProjects = async () => {
+            setLoading(true);
+            try {
+                const endpoint = view === 'projects' ? '/projects' : '/projects/trash';
+                const response = await api.get(endpoint);
+                setProjects(response.data);
+            } catch (error) {
+                toast.error('Error fetching projects. Please try again.');
+                console.error('Error fetching projects:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
         fetchProjects();
     }, [view]);
-
-    const fetchProjects = async () => {
-        setLoading(true);
-        try {
-            const endpoint = view === 'projects' ? '/projects' : '/projects/trash';
-            const response = await api.get(endpoint);
-            setProjects(response.data);
-        } catch (error) {
-            toast.error('Error fetching projects. Please try again.');
-            console.error('Error fetching projects:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleCreateProject = async (e) => {
         e.preventDefault();
@@ -372,7 +372,7 @@ const Dashboard = () => {
             )}
             {/* Delete Confirmation Modal (Soft Delete) */}
             {showDeleteConfirm && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[60] font-inter">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-60 font-inter">
                     <div className="bg-surface max-w-sm w-full rounded-sm shadow-xl p-6">
                         <div className="flex items-center gap-3 text-red-600 mb-4">
                             <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
@@ -407,7 +407,7 @@ const Dashboard = () => {
 
             {/* Permanent Delete Confirmation Modal */}
             {showPermanentDeleteConfirm && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[60] font-inter">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-60 font-inter">
                     <div className="bg-surface max-w-sm w-full rounded-sm shadow-xl p-6">
                         <div className="flex items-center gap-3 text-red-600 mb-4">
                             <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
