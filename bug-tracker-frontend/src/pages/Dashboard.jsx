@@ -196,16 +196,32 @@ const Dashboard = () => {
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                         </div>
                     ) : projects.length === 0 ? (
-                        <div className="text-center py-20 bg-surface rounded-sm border border-border border-dashed">
-                            <Folder size={48} className="mx-auto text-text-muted mb-4 opacity-20" />
-                            <h3 className="text-lg font-medium text-text">No projects found</h3>
-                            <p className="text-text-muted mb-6">Start by creating your first project</p>
-                            <button
-                                onClick={() => setShowModal(true)}
-                                className="text-primary hover:underline font-medium"
-                            >
-                                Create Project
-                            </button>
+                        <div className="text-center py-20 bg-surface rounded-sm border border-border border-dashed font-inter">
+                            {view === 'projects' ? (
+                                <>
+                                    <Folder size={48} className="mx-auto text-text-muted mb-4 opacity-20" />
+                                    <h3 className="text-lg font-medium text-text">No projects found</h3>
+                                    <p className="text-text-muted mb-6">Start by creating your first project</p>
+                                    <button
+                                        onClick={() => setShowModal(true)}
+                                        className="text-primary hover:underline font-medium"
+                                    >
+                                        Create Project
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <Trash2 size={48} className="mx-auto text-text-muted mb-4 opacity-20" />
+                                    <h3 className="text-lg font-medium text-text">Trash is empty</h3>
+                                    <p className="text-text-muted mb-6">Deleted projects will stay here for 60 days before being permanently removed.</p>
+                                    <button
+                                        onClick={() => setView('projects')}
+                                        className="text-primary hover:underline font-medium"
+                                    >
+                                        Back to Projects
+                                    </button>
+                                </>
+                            )}
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
