@@ -8,7 +8,6 @@ import {
     ArrowLeft,
     Search,
     Filter,
-    MoreHorizontal,
     Clock,
     AlertCircle,
     CheckCircle2,
@@ -22,7 +21,9 @@ import {
     Menu,
     X,
     LogOut,
-    Plus
+    Plus,
+    Pencil,
+    Trash2
 } from 'lucide-react';
 import KanbanBoard from '../components/KanbanBoard';
 import TicketDetailsModal from '../components/TicketDetailsModal';
@@ -565,6 +566,7 @@ const ProjectDetails = () => {
                                                     <select
                                                         className="text-xs font-medium text-text bg-transparent border-none focus:ring-0 cursor-pointer hover:bg-background/50 rounded p-1"
                                                         value={ticket.status}
+                                                        onClick={(e) => e.stopPropagation()}
                                                         onChange={(e) => handleUpdateStatus(ticket._id, e.target.value)}
                                                     >
                                                         <option value="To Do">To Do</option>
@@ -582,14 +584,29 @@ const ProjectDetails = () => {
                                                         </span>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <button
-                                                        onClick={() => handleDeleteTicket(ticket._id)}
-                                                        className="text-text-muted hover:text-red-600 transition-colors"
-                                                        title="Delete Issue"
-                                                    >
-                                                        <MoreHorizontal size={18} />
-                                                    </button>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleDeleteTicket(ticket._id);
+                                                            }}
+                                                            className="p-1.5 text-text-muted hover:text-red-600 hover:bg-red-50 rounded-sm transition-all"
+                                                            title="Delete Issue"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setSelectedTicket(ticket);
+                                                            }}
+                                                            className="p-1.5 text-text-muted hover:text-primary hover:bg-primary-light/10 rounded-sm transition-all"
+                                                            title="Edit Issue"
+                                                        >
+                                                            <Pencil size={16} />
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))

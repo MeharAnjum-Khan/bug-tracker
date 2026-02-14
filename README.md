@@ -13,6 +13,9 @@ A robust, industry-standard Bug Tracker application built with the **MERN Stack*
 - **Search & Filter**: Find tickets quickly by status, priority, assignee, or keyword.
 
 ### Advanced Features
+- **Project Trash & Recover**: Safely move projects to a "Trash" state, allowing for easy restoration within 60 days before permanent deletion.
+- **60-Day Data Protection**: Automated 60-day permanent deletion policy powered by MongoDB TTL indexes, ensuring high-standard data lifecycle management.
+- **Professional Issue Actions**: Streamlined "Edit" and "Delete" icons in list views, mirroring industry-standard UX patterns (like Jira) for faster issue management.
 - **Real-Time Collaboration**: Live ticket updates and notifications powered by Socket.io.
 - **Role-Based Access Control (RBAC)**: Manage permissions for Admins, Managers, Developers, and Viewers.
 - **File Attachments**: Upload screenshots and logs to bug reports for better clarity.

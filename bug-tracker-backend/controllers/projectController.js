@@ -1,5 +1,8 @@
 const Project = require('../models/Project');
 const User = require('../models/User');
+const Ticket = require('../models/Ticket');
+const Comment = require('../models/Comment');
+const Notification = require('../models/Notification');
 
 /**
  * @desc    Create a new project
@@ -36,6 +39,7 @@ exports.getProjects = async (req, res) => {
     try {
         const projects = await Project.find({
             'teamMembers.user': req.user.id,
+            isDeleted: { $ne: true },
         }).populate('owner', 'name email');
 
         res.json(projects);
@@ -55,8 +59,8 @@ exports.getProjectById = async (req, res) => {
             .populate('owner', 'name email')
             .populate('teamMembers.user', 'name email');
 
-        if (!project) {
-            return res.status(404).json({ message: 'Project not found' });
+        if (!project || project.isDeleted === true) {
+            return res.status(404).json({ message: 'Project not found or in trash' });
         }
 
         // Check if user is member of project
@@ -117,9 +121,94 @@ exports.deleteProject = async (req, res) => {
             return res.status(403).json({ message: 'Not authorized to delete this project' });
         }
 
-        await project.deleteOne();
+        // Soft delete: move to trash
+        project.isDeleted = true;
+        project.deletedAt = new Date();
+        await project.save();
 
-        res.json({ message: 'Project removed' });
+        res.json({ message: 'Project moved to trash successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+/**
+ * @desc    Get all trashed projects for a user
+ * @route   GET /api/projects/trash
+ * @access  Private
+ */
+exports.getTrashedProjects = async (req, res) => {
+    try {
+        const projects = await Project.find({
+            'teamMembers.user': req.user.id,
+            isDeleted: true,
+        }).populate('owner', 'name email');
+
+        res.json(projects);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+/**
+ * @desc    Restore project from trash
+ * @route   PUT /api/projects/:id/restore
+ * @access  Private
+ */
+exports.restoreProject = async (req, res) => {
+    try {
+        const project = await Project.findById(req.params.id);
+
+        if (!project) {
+            return res.status(404).json({ message: 'Project not found' });
+        }
+
+        // Check if user is owner
+        if (project.owner.toString() !== req.user.id) {
+            return res.status(403).json({ message: 'Not authorized to restore this project' });
+        }
+
+        project.isDeleted = false;
+        project.deletedAt = null;
+        await project.save();
+
+        res.json({ message: 'Project restored successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+/**
+ * @desc    Permanently delete project
+ * @route   DELETE /api/projects/:id/permanent
+ * @access  Private
+ */
+exports.permanentlyDeleteProject = async (req, res) => {
+    try {
+        const project = await Project.findById(req.params.id);
+
+        if (!project) {
+            return res.status(404).json({ message: 'Project not found' });
+        }
+
+        // Check if user is owner
+        if (project.owner.toString() !== req.user.id) {
+            return res.status(403).json({ message: 'Not authorized to delete this project' });
+        }
+
+        // Get all tickets for this project to delete their comments
+        const tickets = await Ticket.find({ project: req.params.id });
+        const ticketIds = tickets.map(ticket => ticket._id);
+
+        // Delete all associated data
+        await Promise.all([
+            Comment.deleteMany({ ticket: { $in: ticketIds } }),
+            Notification.deleteMany({ project: req.params.id }),
+            Ticket.deleteMany({ project: req.params.id }),
+            project.deleteOne(),
+        ]);
+
+        res.json({ message: 'Project and all associated data permanently removed' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

@@ -4,7 +4,7 @@ This is the backend API for the Bug Tracker application. It handles user authent
 
 ## 🛠️ Tech Stack
 - **Node.js & Express.js**: High-performance RESTful API.
-- **MongoDB & Mongoose**: Scalable NoSQL database with structured schemas.
+- **MongoDB & Mongoose**: Scalable NoSQL database with **TTL indexing** for automated data cleanup.
 - **JWT & bcryptjs**: Secure authentication and password hashing.
 - **Socket.io**: Real-time events and data synchronization.
 - **Helmet**: Essential security headers.
@@ -15,6 +15,8 @@ This is the backend API for the Bug Tracker application. It handles user authent
 ## 🚀 Features
 - **Secure Authentication**: JWT-based auth with bcrypt password hashing.
 - **Real-Time Event Engine**: Socket.io integration for instant data synchronization.
+- **Trash & Recover Engine**: Professional soft-delete implementation allowing project restoration within a 60-day window.
+- **60-Day Auto-Deletion**: Automated permanent data scrubbing using MongoDB TTL indexes.
 - **Scalable Data Models**: Mongoose-driven schemas for Projects, Tickets, and Users.
 - **Security-First Design**: Implementation of Helmet and CORS for robust API protection.
 

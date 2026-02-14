@@ -6,6 +6,9 @@ const {
     getProjectById,
     updateProject,
     deleteProject,
+    getTrashedProjects,
+    restoreProject,
+    permanentlyDeleteProject,
     addMember,
     removeMember,
 } = require('../controllers/projectController');
@@ -18,10 +21,15 @@ router.route('/')
     .post(createProject)
     .get(getProjects);
 
+router.get('/trash', getTrashedProjects);
+
 router.route('/:id')
     .get(getProjectById)
     .put(updateProject)
     .delete(deleteProject);
+
+router.put('/:id/restore', restoreProject);
+router.delete('/:id/permanent', permanentlyDeleteProject);
 
 router.post('/:id/members', addMember);
 router.delete('/:id/members/:userId', removeMember);

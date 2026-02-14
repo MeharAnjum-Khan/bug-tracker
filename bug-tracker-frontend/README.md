@@ -26,6 +26,8 @@ This is the React-based frontend for the Bug Tracker application. It provides a 
 
 ## 🚀 Features
 - **Kanban Board**: Drag-and-drop tickets across "To Do", "In Progress", and "Done".
+- **Trash View**: A dedicated dashboard category for managing and restoring deleted projects.
+- **Professional Direct Actions**: Industry-standard "Edit" and "Delete" icons for instant issue management in list views.
 - **App-wide Search System**: Instantly locate projects or issues from any page with high-speed query results.
 - **Centralized Notification Hub**: Real-time alerts with a persistent unread counter and dedicated dropdown.
 - **Unified Account Management**: Comprehensive user profile and settings interface.

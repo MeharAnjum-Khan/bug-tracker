@@ -26,6 +26,15 @@ const projectSchema = new mongoose.Schema({
             default: 'Developer'
         }
     }],
+    isDeleted: {
+        type: Boolean,
+        default: false,
+    },
+    deletedAt: {
+        type: Date,
+        default: null,
+        index: { expires: '60d' } // MongoDB TTL index: auto-delete after 60 days
+    },
     createdAt: {
         type: Date,
         default: Date.now,
